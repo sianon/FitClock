@@ -64,6 +64,8 @@ class MainWindow:
         else:
             self.check_btn_var.set('0')
 
+        self.ledit_period.insert(0, (self.config.GetPeriod()))
+
         self.check_btn = ttk.Checkbutton(
             root, text='checkbox', variable=self.check_btn_var,
             command=self.OnRepeatCheck)
