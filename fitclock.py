@@ -9,6 +9,7 @@ import threading
 import sched
 import time
 from tkinter import messagebox
+import ctypes
 
 
 class MainWindow:
@@ -42,7 +43,7 @@ class MainWindow:
 
         self.label2 = ttk.Label(root, text='指定时间:')
         self.label2.grid(column=0, row=1, pady=6)
-        self.ledit = ttk.Entry(root)
+        self.ledit = DateEntry(root)
         self.ledit.config(width=10)
         self.ledit.grid(column=1, row=1, pady=6)
 
@@ -50,9 +51,15 @@ class MainWindow:
         self.btn_date.bind('<1>', self.ShowCalendar)
         self.btn_date.grid(column=2, row=1, pady=6)
 
-        self.btn_time = ttk.Button(root, text="时分秒的选择")
+        # style = ttk.Style()
+
+        # # 设置 ttk.Button 的宽度为 100
+        # style.configure('TButton', width=10)
+
+        self.btn_time = ttk.Button(
+            root, text="时分秒的选择", width=10)
         self.btn_time.bind('<1>', self.ShowTime)
-        self.btn_time.grid(column=3, row=1, pady=6)
+        self.btn_time.grid(column=3, row=1, padx=10, pady=6,  sticky="nsew")
 
         self.lab_repeat = ttk.Label(root, text="是否重复:")
         self.lab_repeat.grid(column=0, row=2, pady=6)
@@ -78,9 +85,14 @@ class MainWindow:
         self.comb_repeat.config(width=10)
         self.comb_repeat.grid(column=2, row=2, pady=6)
 
-        self.btn_do_plan = ttk.Button(root, text="执行计划")
+        self.btn_do_plan = ttk.Button(root, text="执行健康计划")
         self.btn_do_plan.bind('<1>', self.DoPlan)
         self.btn_do_plan.grid(column=0, row=3, pady=6, columnspan=4)
+
+        self.ln_noto_time = ttk.Entry(root, width=8)
+        self.ln_noto_time.bind('<1>', self.DoPlan)
+        self.ln_noto_time.grid(column=4, row=1, pady=6)
+
         self.master.columnconfigure(3, weight=1)
 
         self.x = 0
@@ -109,6 +121,7 @@ class MainWindow:
         var = timestamp_sec % (period*60)
         if var == 0:
             messagebox.showinfo('提示', '时间到了，该休息啦')
+            ctypes.windll.user32.LockWorkStation()
         if self.check_btn_var == 0:
             return False
         return True
@@ -132,20 +145,33 @@ class MainWindow:
         now = datetime.now().time()
         analog_win.setHours(now.hour)
         analog_win.setMinutes(now.minute)
-        # self.timepicker.selection_get()
         analog_win.pack()
+
+        def ShowSelectedTime(ln_noto_time):
+            time = "{: 02d}: {: 02d}: {: 02d}".format(
+                analog_win.hours(), analog_win.minutes(), 0)
+            print(f"Selected time: {time}")
+            ln_noto_time.delete(0, 'end')
+            ln_noto_time.insert(0, time)
+
+        btn = ttk.Button(top, text="Get Selected Time",
+                         command=lambda: ShowSelectedTime(self.ln_noto_time))
+        btn.pack()
+
+        print(analog_win.hours())
+        # self.ln_noto_time.set("%H:%M:%S", test)
 
     def ShowCalendar(self, event):
         top = tk.Toplevel(self.master)
         cal = DateEntry(top)
         cal.pack(padx=10, pady=10)
 
-        def SelectDate():
-            self.btn_time.configure(
-                text=cal.selection_get().strftime('%Y-%m-%d'))
-            top.destroy()
-        # ttk.Button(top, text='Select', command=SelectDate()).pack(pady=5)
-        top.grab_set()
+        # def SelectDate():
+        #     self.btn_time.configure(
+        #         text=cal.selection_get().strftime('%Y-%m-%d'))
+        #     top.destroy()
+        # # ttk.Button(top, text='Select', command=SelectDate()).pack(pady=5)
+        # top.grab_set()
 
         # top.mainloop()
 
