@@ -4,17 +4,18 @@ from tkcalendar import Calendar, DateEntry
 from tktimepicker import timepicker
 from datetime import datetime
 from player import VideoPlayer
+from config import Config
 
 
 class MainWindow:
     def __init__(self, master):
         self.master = master
-        self.master.title("hello")
+        self.master.title("健康闹钟")
         root = self.master
         root.configure(padx=20, pady=20)
         root.geometry("400x171")
         self.master.geometry('+{}+{}'.format(200, 200))
-        root.overrideredirect(True)
+        # root.overrideredirect(True)
         self.lab_act = ttk.Label(root, text="健康动作:")
         self.lab_act.grid(column=0, row=0, pady=6)
 
@@ -23,6 +24,17 @@ class MainWindow:
         self.comb_act.current(0)
         self.comb_act.config(width=10)
         self.comb_act.grid(column=1, row=0, pady=6)
+
+        self.lab_period = ttk.Label(root, text="提醒间隔(分钟):")
+        self.lab_period.grid(column=2, row=0, pady=6)
+
+        def validate_num(input_str):
+            return input_str.isdigit()
+        validate_cmd = root.register(validate_num)
+        self.ledit_period = ttk.Entry(
+            root, validate="key", validatecommand=(validate_cmd, '%P'))
+        self.ledit_period.config(width=10)
+        self.ledit_period.grid(column=3, row=0, pady=6)
 
         self.label2 = ttk.Label(root, text='指定时间:')
         self.label2.grid(column=0, row=1, pady=6)
@@ -60,15 +72,16 @@ class MainWindow:
         self.mouse_y = 0
         self.is_dragging_window = False
 
-        self.master.bind("<ButtonPress-1>", self.start_drag_window)
-        self.master.bind("<B1-Motion>", self.drag_window)
-        self.master.bind("<ButtonRelease-1>", self.stop_drag_window)
+        # self.master.bind("<ButtonPress-1>", self.start_drag_window)
+        # self.master.bind("<B1-Motion>", self.drag_window)
+        # self.master.bind("<ButtonRelease-1>", self.stop_drag_window)
+        self.config = Config()
 
     def run(self):
         self.master.mainloop()
 
     def DoPlan(self, event):
-        pl = VideoPlayer()
+        self.config.SetTime(self.ledit_period.get())
 
     def ShowTime(self, event):
         top = tk.Toplevel(self.master)
@@ -87,7 +100,7 @@ class MainWindow:
         cal.pack(padx=10, pady=10)
 
         def SelectDate():
-            self.btn.configure(
+            self.btn_time.configure(
                 text=cal.selection_get().strftime('%Y-%m-%d'))
             top.destroy()
         # ttk.Button(top, text='Select', command=SelectDate()).pack(pady=5)
