@@ -10,6 +10,8 @@ import sched
 import time
 from tkinter import messagebox
 import ctypes
+import pystray
+from PIL import Image
 
 
 class MainWindow:
@@ -20,6 +22,10 @@ class MainWindow:
         root.configure(padx=20, pady=20)
         root.geometry("400x171")
         self.master.geometry('+{}+{}'.format(200, 200))
+        root.protocol("WM_DELETE_WINDOW", self.OnClose)
+        root.bind("<Unmap>", self.OnIconify)
+        # root.bind("<Map>", self.OnRestore)
+
         # root.overrideredirect(True)
         self.lab_act = ttk.Label(root, text="健康动作:")
         self.lab_act.grid(column=0, row=0, pady=6)
@@ -101,9 +107,26 @@ class MainWindow:
         self.mouse_y = 0
         self.is_dragging_window = False
 
+        self.label_left = ttk.Label(root, text='')
+        self.label_left.grid(column=4, row=0, pady=6)
         # self.master.bind("<ButtonPress-1>", self.start_drag_window)
         # self.master.bind("<B1-Motion>", self.drag_window)
         # self.master.bind("<ButtonRelease-1>", self.stop_drag_window)
+
+    def OnClose(self):
+        self.master.quit()
+
+    def OnRestore(self):
+        self.master.deiconify()
+
+    def OnIconify(self, event):
+        image = Image.open('icon.png')
+        menu = pystray.Menu(pystray.MenuItem('Exit', self.OnClose),
+                            pystray.MenuItem('Restore', self.OnRestore))
+
+        tray_icon = pystray.Icon('name', image, 'title', menu)
+        self.master.withdraw()
+        tray_icon.run()
 
     def OnRepeatCheck(self):
         self.config.SetRepeat(self.check_btn_var.get())
@@ -118,7 +141,11 @@ class MainWindow:
         timestamp_sec = int(time.time()) - self.config.GetLastTime()
         if timestamp_sec == 0:
             return True
+
         var = timestamp_sec % (period*60)
+        time_left = period*60 - timestamp_sec
+        self.label_left.configure(text=time_left)
+
         if var == 0:
             messagebox.showinfo('提示', '时间到了，该休息啦')
             ctypes.windll.user32.LockWorkStation()

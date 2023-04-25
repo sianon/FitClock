@@ -27,3 +27,5 @@ Makefile
 Makefile.Debug
 Makefile.Release
 __pycache__
+dist
+build
