@@ -1,4 +1,5 @@
 import configparser
+import time
 
 
 class Config:
@@ -27,7 +28,29 @@ class Config:
         with open('config.ini', 'w') as f:
             self.config.write(f)
 
-    def SetTime(self, time):
-        self.config.set('time', 'last_time', time)
+    def SetTime(self, period_time):
+        l_time = int(time.time())
+        self.config.set('time', 'last_time', str(l_time))
+        self.config.set('time', 'period_time', period_time)
         with open('config.ini', 'w') as f:
             self.config.write(f)
+
+    def GetPeriod(self) -> int:
+        if not self.config.get('time', 'period_time', fallback='0'):
+            return 0
+        return self.config.getint('time', 'period_time', fallback=0)
+
+    def GetLastTime(self) -> int:
+        if not self.config.get('time', 'last_time', fallback='0'):
+            return 0
+        return self.config.getint('time', 'last_time', fallback=0)
+
+    def SetRepeat(self, repeat):
+        self.config.set('time', 'repeat', str(repeat))
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+
+    def GetRepeat(self) -> bool:
+        if not self.config.get('time', 'repeat', fallback='0'):
+            return 0
+        return self.config.getint('time', 'repeat', fallback=0)

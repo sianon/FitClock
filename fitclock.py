@@ -5,6 +5,10 @@ from tktimepicker import timepicker
 from datetime import datetime
 from player import VideoPlayer
 from config import Config
+import threading
+import sched
+import time
+from tkinter import messagebox
 
 
 class MainWindow:
@@ -52,7 +56,18 @@ class MainWindow:
 
         self.lab_repeat = ttk.Label(root, text="是否重复:")
         self.lab_repeat.grid(column=0, row=2, pady=6)
-        self.check_btn = ttk.Checkbutton(root, text='checkbox')
+
+        self.config = Config()
+        self.check_btn_var = tk.IntVar()
+        if self.config.GetRepeat():
+            self.check_btn_var.set('1')
+        else:
+            self.check_btn_var.set('0')
+
+        self.check_btn = ttk.Checkbutton(
+            root, text='checkbox', variable=self.check_btn_var,
+            command=self.OnRepeatCheck)
+
         self.check_btn.grid(column=1, row=2, pady=6)
 
         self.comb_repeat = ttk.Combobox(root)
@@ -75,13 +90,37 @@ class MainWindow:
         # self.master.bind("<ButtonPress-1>", self.start_drag_window)
         # self.master.bind("<B1-Motion>", self.drag_window)
         # self.master.bind("<ButtonRelease-1>", self.stop_drag_window)
-        self.config = Config()
+
+    def OnRepeatCheck(self):
+        self.config.SetRepeat(self.check_btn_var.get())
 
     def run(self):
         self.master.mainloop()
 
+    def CheckTime(self) -> bool:
+        period = self.config.GetPeriod()
+        if period == 0:
+            return False
+        timestamp_sec = int(time.time()) - self.config.GetLastTime()
+        if timestamp_sec == 0:
+            return True
+        var = timestamp_sec % (period*60)
+        if var == 0:
+            messagebox.showinfo('提示', '时间到了，该休息啦')
+        if self.check_btn_var == 0:
+            return False
+        return True
+
+    def RepeatTimer(self, interval):
+        if not self.CheckTime():
+            return
+        timer = threading.Timer(interval, self.RepeatTimer, [interval])
+        timer.start()
+        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+
     def DoPlan(self, event):
         self.config.SetTime(self.ledit_period.get())
+        self.RepeatTimer(1)
 
     def ShowTime(self, event):
         top = tk.Toplevel(self.master)
